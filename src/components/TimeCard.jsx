@@ -7,45 +7,78 @@ import {
   Typography,
 } from "@mui/joy";
 import { useRef, useState } from "react";
+import ResultModal from "./ResultModal";
 
 // const useStyle = styled((theme)=>(
 //     {
 //         card: {
-//             backgroundColor: theme.palete   
+//             backgroundColor: theme.palete
 //         }
 // )
 // })
 
-export default function TimeCard({ title }) {
-
+export default function TimeCard({ title, targetTime }) {
   const timer = useRef();
+  const dialog = useRef();
 
-  const [timerExpired, setTimerExpired] = useState(false)
-  const [timerStarted, setTimerStarted] = useState(false)
-  function handleStart(){
-    timer.current =setTimeout(()=>{
-        setTimerExpired(true)
-    }, )
+  const [timeRemaining, setTimeRemaining] = useState(targetTime * 1000);
+  // const timeIsActive = timeRemaining > 0 && timeRemaining < (targetTime * 1000);
+  const timeIsActive = timeRemaining > 0 && timeRemaining < targetTime * 1000
+  const [open, setOpen] = useState(false);
+  if (timeRemaining <= 0) {
+    clearInterval(timer.current);
+    console.log('first')
+    // setTimeRemaining(targetTime * 1000)
+    !open && setOpen(true)
   }
+  function handleStart() {
+    timer.current = setInterval(() => {
+      setTimeRemaining(
+        (prevTimeRemaining) => prevTimeRemaining && prevTimeRemaining - 10
+      );
+    }, 10);
 
+  }
+  function handleStop() {
+    setOpen(true);
+    clearInterval(timer.current);
+  }
+  function handleShow() {
+    setOpen(false);
+  }
+  function handleReset(params) {
+    setTimeRemaining(targetTime * 1000)
+  }
   const card = (
     <>
-      <CardContent 
-        sx={{ backgroundColor: "white", spacing: 1 }}
-      >
-        <Typography variant="h4">
-          {title}
+      <CardContent sx={{ backgroundColor: "white", spacing: 1 }}>
+        <Typography variant="h4">{title}</Typography>
+        <Typography variant="outlined" sx={{ mb: 6 }}>
+          {targetTime} second
         </Typography>
-        <Typography variant="outlined"  sx={{ mb: 6 }}>1 second</Typography>
         <CardActions>
-          <Button sx={{backgroundColor: 'green', }}>Start Challenge</Button>
+          <Button
+            onClick={timeIsActive ? handleStop : handleStart}
+            sx={{ backgroundColor: "green" }}
+          >
+            {timeIsActive ? "Stop" : "Start"}
+          </Button>
         </CardActions>
-        <Typography>Timer inactive</Typography>
+        <Typography>
+          {timeIsActive ? "Timer is Running" : "Timer inactive"}
+        </Typography>
       </CardContent>
     </>
   );
   return (
     <>
+      <ResultModal
+        remainingTime={timeRemaining}
+        reset={handleReset}
+        open={open}
+        handleShow={handleShow}
+        targetTime={targetTime}
+      />
       <Box sx={{ minWidth: 275 }}>
         <Card variant="outlined">{card}</Card>
       </Box>
